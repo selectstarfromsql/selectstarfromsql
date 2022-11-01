@@ -1,0 +1,72 @@
+https://docs.microsoft.com/en-us/sql/database-engine/configure-windows/server-memory-server-configuration-options?view=sql-server-2014
+
+Example B. Determining Current Memory Allocation
+
+SELECT  
+(physical_memory_in_use_kb/1024) AS Memory_usedby_Sqlserver_MB,  
+(locked_page_allocations_kb/1024) AS Locked_pages_used_Sqlserver_MB,  
+(total_virtual_address_space_kb/1024) AS Total_VAS_in_MB,  
+process_physical_memory_low,  
+process_virtual_memory_low  
+FROM sys.dm_os_process_memory;  
+
+if total server memory is > than target srever memory : we can called there is a memory pressure
+
+https://msdn.microsoft.com/en-us/library/aa337311.aspx?f=255&MSPPError=-2147217396
+
+User Action
+If you are not using Resource Governor, we recommend that you verify the overall server state and load, or check the resource pool or workload group settings.
+
+The following list outlines general steps that will help in troubleshooting memory errors:
+
+Verify whether other applications or services are consuming memory on this server. Reconfigure less critical applications or services to consume less memory.
+
+Start collecting performance monitor counters for SQL Server: Buffer Manager, SQL Server: Memory Manager.
+
+Check the following SQL Server memory configuration parameters:
+
+max server memory
+
+min server memory
+
+min memory per query
+
+Notice unusual settings. Correct them as necessary. Account for increased memory requirements. Default settings are listed in "Setting Server Configuration Options" in SQL Server Books Online.
+
+Observe DBCC MEMORYSTATUS output and the way it changes when you see these error messages.
+
+Check the workload (for example, number of concurrent sessions, currently executing queries).
+
+The following actions may make more memory available to SQL Server:
+
+If applications besides SQL Server are consuming resources, try stopping running these applications or consider running them on a separate server. This will remove external memory pressure.
+
+If you have configured max server memory, increase its setting.
+
+Run the following DBCC commands to free several SQL Server memory caches.
+
+DBCC FREESYSTEMCACHE
+
+DBCC FREESESSIONCACHE
+
+DBCC FREEPROCCACHE
+
+If the problem continues, you will need to investigate further and possibly reduce workload.
+
+------------------------------------------------------------------------------------------------------
+
+https://social.msdn.microsoft.com/Forums/sqlserver/en-US/1e51965d-fbb1-4f73-b977-5284516b3d45/total-server-memory-vs-target-server-memory-made-me-crazy?forum=sqldatabaseengine
+
+The first one is correct.  If Total Server Memory is less than Target Server Memory it can be a sign of memory pressure.  However, I very rarely rely on this as a way to look for memory pressure, there a plenty of other counters that give you a better clue when SQL is in memory contention.  
+
+Look at Page Life Expectancy, which should be well above the 300 number that most of the stuff online says.  This tells you how long pages are staying in the buffer pool, and a value of 300 equates to 5 minutes.  If you have 120GB of buffer pool and it is churning ever 5 minutes, that equates to 409.6 MB/sec sustained disk I/O for the system which is a lot of disk activity to have to sustain. 
+
+Look at Lazy Writes/sec which tells you that number of times the buffer pool flushed dirty pages to disk outside of the CHECKPOINT process.  This should be near zero.
+
+Look at Free Pages/sec and Free List Stalls/sec.  You don't want to see Free Pages bottom out which will result in a Free List Stall while the buffer pool has to free pages for usage.
+
+Look at Memory Grants Pending which will tell you if you have processes waiting on workspace memory to execute.
+
+
+
+
