@@ -1,5 +1,5 @@
 https://docs.microsoft.com/en-us/sql/database-engine/configure-windows/server-memory-server-configuration-options?view=sql-server-2014
-
+ My notes to work:
 Example B. Determining Current Memory Allocation
 
 SELECT  
