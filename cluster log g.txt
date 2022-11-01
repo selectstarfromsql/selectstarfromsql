@@ -1,0 +1,7 @@
+cluster log /g
+
+
+
+or 
+Import-Module FailoverClusters
+get-clusterlog -uselocaltime -Timespan 5 
